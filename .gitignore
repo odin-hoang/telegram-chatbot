@@ -1,0 +1,76 @@
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore build output
+dist/
+build/
+
+# Ignore environment files
+.env
+.env.local
+.env.*.local
+
+# Ignore log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore package lock files
+package-lock.json
+yarn.lock
+
+# Ignore coverage directory
+coverage/
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore database files
+*.sqlite
+*.db
+
+# Ignore backup files
+*.bak
+*.backup
+
+# Ignore configuration files that may contain sensitive information
+config.js
+config.json
+
+# Ignore dependency directories
+jspm_packages/
+bower_components/
+
+# Ignore cache directories
+.cache/
+.npm/
+
+# Ignore test output
+test-results/
+
+# Ignore documentation generated files
+docs/
+
+# Ignore miscellaneous
+*.pid
+*.seed
+*.pid.lock

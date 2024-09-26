@@ -1,0 +1,15 @@
+{
+  "name": "telegram-chatbot",
+  "version": "1.0.0",
+  "description": "Telegram chatbot project",
+  "main": "src/bot.ts",
+  "scripts": {
+    "start": "node src/bot.js"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^22.7.2",
+    "node-telegram-bot-api": "^0.53.0"
+  }
+}
