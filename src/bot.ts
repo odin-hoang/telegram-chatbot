@@ -42,7 +42,7 @@ const webAppKeyboard = {
         {
           text: "Open Mini App",
           web_app: {
-            url: "https://thansohoconline.vercel.app",
+            url: `${process.env.WEB_APP_URL}` || "",
           },
         },
       ],
@@ -55,6 +55,7 @@ const webAppKeyboard = {
 bot.setMyCommands([
   { command: CommandText.GET_ADDRESS, description: "Get Address" },
   { command: CommandText.ADD_ADDRESS, description: "Add Address" },
+  { command: CommandText.FLUSH_ADDRESS, description: "Flush Address" },
   { command: CommandText.START, description: "Start" },
   { command: CommandText.HELP, description: "Help" },
   { command: CommandText.WALLET, description: "Wallet" },
@@ -171,11 +172,11 @@ const inlineKeyboard = {
     [
       {
         text: "🔍 Explore Transaction",
-        url: "https://thansohoconline.vercel.app",
+        url: `${process.env.EXPLORE_URL}`,
       },
       {
         text: "✅ Trade",
-        url: "https://thansohoconline.vercel.app",
+        url: `${process.env.TRADE_URL}`,
       },
     ],
   ],
