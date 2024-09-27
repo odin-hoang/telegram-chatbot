@@ -4,7 +4,7 @@
   "description": "Telegram chatbot project",
   "main": "src/bot.ts",
   "scripts": {
-    "start": "node src/bot.js",
+    "start": "npx ts-node src/bot.ts",
     "dev": "npx ts-node src/bot.ts --watch"
   },
   "author": "Your Name",
