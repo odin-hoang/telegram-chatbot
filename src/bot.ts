@@ -1,10 +1,12 @@
 import TelegramBot from "node-telegram-bot-api";
 import { CommandText } from "./types";
 import dotenv from "dotenv";
-import { inlineKeyboard } from "telegraf/typings/markup";
+
 import { MongoClient } from "mongodb";
 import { getTransaction } from "./services/transaction";
 import cron from "node-cron";
+import { welcomeMessage } from "./message/welcome";
+import { transactionMessage } from "./message/transaction";
 dotenv.config();
 
 const token = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -27,6 +29,11 @@ async function connectToMongo() {
 }
 connectToMongo();
 
+// Add error handling for polling errors
+bot.on("polling_error", (error) => {
+  console.error("Polling error:", error.name, error.message);
+});
+
 // Create a Web App button (mini-app) in the reply markup
 const webAppKeyboard = {
   reply_markup: {
@@ -44,7 +51,9 @@ const webAppKeyboard = {
     one_time_keyboard: true,
   },
 };
+
 bot.setMyCommands([
+  { command: CommandText.GET_ADDRESS, description: "Get Address" },
   { command: CommandText.ADD_ADDRESS, description: "Add Address" },
   { command: CommandText.START, description: "Start" },
   { command: CommandText.HELP, description: "Help" },
@@ -53,7 +62,7 @@ bot.setMyCommands([
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
-  await saveSession(chatId, "start");
+  await saveSession(chatId, { chatId, state: "start" });
   bot.sendMessage(chatId, "Hello! Welcome to the bot.");
 });
 
@@ -61,22 +70,27 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text as CommandText;
   const user = msg.from?.username;
+
   // Retrieve user session
   const session = await sessionsCollection.findOne({ chatId });
-  const currentAddress = session.address;
-  // Add the new address to the user's address list
+  const currentAddress = session?.address || [];
 
-  // If the user is expected to enter their address
+  // Add the new address to the user's address list
   if (session && session.state === "awaiting_address") {
     currentAddress.push(messageText);
     await updateSession(chatId, { address: currentAddress, state: null });
     bot.sendMessage(chatId, `🗿 Address saved: ${messageText}`);
     return; // Exit since the address has been handled
   }
+
   if (messageText.startsWith("/")) {
     switch (messageText) {
       case CommandText.START:
-        bot.sendMessage(chatId, `👋 Welcome, ${user} to the aptos notifier!`);
+        const message = welcomeMessage.replace("{user}", user || "User");
+
+        bot.sendMessage(chatId, message, {
+          parse_mode: "Markdown",
+        });
         await updateSession(chatId, { userName: user, address: [] });
         break;
       case CommandText.WALLET:
@@ -86,12 +100,11 @@ bot.on("message", async (msg) => {
         bot.sendMessage(chatId, "ℹ️ Please contact our support team.");
         break;
       case CommandText.ADD_ADDRESS:
-        // Ask user to enter their address and set state to 'awaiting_address'
         await updateSession(chatId, { state: "awaiting_address" });
         bot.sendMessage(chatId, "👋 Please enter your address:");
         break;
       case CommandText.GET_ADDRESS:
-        const addresses = session.address;
+        const addresses = session?.address || [];
         if (addresses.length === 0) {
           bot.sendMessage(chatId, "👋 You have no address.");
           break;
@@ -153,23 +166,44 @@ cron.schedule("*/1 * * * *", async () => {
   triggerSendNotify();
 });
 
+const inlineKeyboard = {
+  inline_keyboard: [
+    [
+      {
+        text: "🔍 Explore Transaction",
+        url: "https://thansohoconline.vercel.app",
+      },
+      {
+        text: "✅ Trade",
+        url: "https://thansohoconline.vercel.app",
+      },
+    ],
+  ],
+  resize_keyboard: true,
+  one_time_keyboard: true,
+};
 async function triggerSendNotify() {
-  const users = await sessionsCollection.find().toArray();
-  for (const user of users) {
-    const chatId = user.chatId;
-    const addresses = user.address;
-    const DECIMAL = Math.pow(10, 8);
-    // iterate through each address
-    for (const address of addresses) {
-      const transactions = await getTransaction(address, "0");
-      const messages = transactions.map((tx: any) => {
-        bot.sendMessage(
-          chatId,
-          `💰 Transaction Hash: ${tx.transaction_hash}\n💰 Amount: ${
-            tx.amount / DECIMAL
-          }\n💰 Timestamp: ${tx.timestamp}`
-        );
-      });
+  try {
+    const users = await sessionsCollection.find().toArray();
+    for (const user of users) {
+      const chatId = user.chatId;
+      const addresses = user.address || [];
+      const DECIMAL = Math.pow(10, 8);
+      for (const address of addresses) {
+        const transactions = await getTransaction(address, "0");
+        transactions.forEach((tx: any) => {
+          const message = transactionMessage
+            .replace("{txHash}", tx.transaction_hash)
+            .replace("{amount}", `${tx.amount / DECIMAL}`)
+            .replace("{timestamp}", `${new Date(tx.timestamp / 1000)}`);
+          bot.sendMessage(chatId, message, {
+            parse_mode: "Markdown",
+            reply_markup: inlineKeyboard,
+          });
+        });
+      }
     }
+  } catch (err) {
+    console.error("Error in triggerSendNotify:", err);
   }
 }
