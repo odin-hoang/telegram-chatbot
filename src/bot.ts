@@ -2,7 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { CommandText } from "./types";
 import dotenv from "dotenv";
 
-import { MongoClient } from "mongodb";
+import { Collection, Db, MongoClient } from "mongodb";
 import { getTransaction } from "./services/transaction";
 import cron from "node-cron";
 import { welcomeMessage } from "./message/welcome";
@@ -15,7 +15,8 @@ const bot = new TelegramBot(token, { polling: true });
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost:27017";
 const client = new MongoClient(mongoUrl);
 const dbName = "telegram_bot"; // Database name
-let db, sessionsCollection: any;
+let db: Db;
+let sessionsCollection: Collection;
 
 async function connectToMongo() {
   try {
@@ -52,19 +53,11 @@ const webAppKeyboard = {
   },
 };
 
-bot.setMyCommands([
-  { command: CommandText.GET_ADDRESS, description: "Get Address" },
-  { command: CommandText.ADD_ADDRESS, description: "Add Address" },
-  { command: CommandText.FLUSH_ADDRESS, description: "Flush Address" },
-  { command: CommandText.START, description: "Start" },
-  { command: CommandText.HELP, description: "Help" },
-  { command: CommandText.WALLET, description: "Wallet" },
-]);
+bot.setMyCommands([{ command: CommandText.START, description: "Start" }]);
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   await saveSession(chatId, { chatId, state: "start" });
-  bot.sendMessage(chatId, "Hello! Welcome to the bot.");
 });
 
 bot.on("message", async (msg) => {

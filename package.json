@@ -7,7 +7,7 @@
     "start": "npx ts-node src/bot.ts",
     "dev": "npx ts-node src/bot.ts --watch"
   },
-  "author": "Your Name",
+  "author": "Khai Hoang",
   "license": "MIT",
   "dependencies": {
     "@types/node": "^22.7.2",

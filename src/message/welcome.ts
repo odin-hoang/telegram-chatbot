@@ -1,3 +1,3 @@
 export const welcomeMessage = `
-    👋 Welcome *{user}* to the aptos notifier!
+    👋 Welcome *{user}* to GFI Blockchain!
 `;
